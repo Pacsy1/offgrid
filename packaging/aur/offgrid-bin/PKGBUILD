@@ -1,7 +1,7 @@
 # Maintainer: Pacsy <pacsybusiness at gmail dot com>
 
 pkgname=offgrid-bin
-pkgver=0.1.12
+pkgver=1.0.0
 pkgrel=1
 pkgdesc='Telemetry-free desktop app for local coding agents (unofficial T3 Code fork)'
 arch=('x86_64' 'aarch64')
@@ -44,8 +44,8 @@ conflicts=('offgrid')
 options=('!debug' '!strip')
 
 _appimage="Offgrid-${pkgver}-${CARCH/aarch64/arm64}.AppImage"
-_asset_x86_64="Offgrid-0.1.12-x86_64.AppImage"
-_asset_aarch64="Offgrid-0.1.12-arm64.AppImage"
+_asset_x86_64="Offgrid-1.0.0-x86_64.AppImage"
+_asset_aarch64="Offgrid-1.0.0-arm64.AppImage"
 source=("${pkgname}-${pkgver}-LICENSE::https://raw.githubusercontent.com/Pacsy1/offgrid/v${pkgver}/LICENSE")
 sha256sums=('935d8f2af0c703f9c39517ee57cc4930b19d02d533be930b63f0e82f93614b43') # upstream license
 source_x86_64=("Offgrid-${pkgver}-x86_64.AppImage::https://github.com/Pacsy1/offgrid/releases/download/v${pkgver}/$_asset_x86_64")

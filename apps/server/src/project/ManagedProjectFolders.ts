@@ -199,7 +199,7 @@ function namedProjectReadme(name: string): string {
     "",
     `# ${name}`,
     "",
-    "Created in [Offgrid](https://t3.codes).",
+    "Created in [Offgrid](https://github.com/Pacsy1/offgrid).",
     "",
   ].join("\n");
 }

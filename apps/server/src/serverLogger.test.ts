@@ -3,28 +3,18 @@ import { assert, describe, it } from "@effect/vitest";
 import * as NodeOS from "node:os";
 import * as NodeUtil from "node:util";
 
-import { ExternalLauncherBrowserSpawnError } from "@offgrid/contracts";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Redactable from "effect/Redactable";
 import * as Path from "effect/Path";
-import * as Tracer from "effect/Tracer";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
-import * as TestConsole from "effect/testing/TestConsole";
-
 
 import * as ServerConfig from "./config.ts";
-import * as ExternalLauncher from "./process/externalLauncher.ts";
 import * as ServerLogger from "./serverLogger.ts";
-import {
-  announceStartupPairingUrl,
-  logBrowserAutoOpenUnavailable,
-  maybeOpenBrowser,
-} from "./serverRuntimeStartup.ts";
 
 interface ExportedRequest {
   readonly url: string;
@@ -80,43 +70,6 @@ const layerConfig = (overrides: Partial<ServerConfig.ServerConfig["Service"]>) =
     }),
   ).pipe(Layer.provide(NodePath.layer));
 
-/**
- * Runs `program` (one log line by default) inside a span so the tracer logger
- * has somewhere to attach an event, then reports both what the collector
- * received and what landed on the span.
- */
-const logInSpanThrough = (
-  overrides: Partial<ServerConfig.ServerConfig["Service"]>,
-  program: Effect.Effect<void> = Effect.log("server logger under test"),
-) =>
-  Effect.gen(function* () {
-    const requests: Array<ExportedRequest> = [];
-    const spans: Array<Tracer.NativeSpan> = [];
-    const layerTracer = Layer.succeed(
-      Tracer.Tracer,
-      Tracer.make({
-        span: (spanOptions) => {
-          const span = new Tracer.NativeSpan(spanOptions);
-          spans.push(span);
-          return span;
-        },
-      }),
-    );
-    yield* program.pipe(
-      Effect.withSpan("server-logger-test"),
-      Effect.provide(
-        Layer.mergeAll(
-          ServerLogger.layer.pipe(
-            Layer.provide(layerConfig(overrides)),
-            Layer.provide(layerCollector(requests)),
-          ),
-          layerTracer,
-        ),
-      ),
-    );
-    return { requests, spans };
-  });
-
 const printThroughConsole = (fields: object) =>
   Effect.gen(function* () {
     const printed: Array<string> = [];
@@ -128,12 +81,19 @@ const printThroughConsole = (fields: object) =>
     } satisfies Console.Console;
     yield* Effect.logWarning("pull request watch check failed", fields).pipe(
       Effect.provide(
-        ServerLogger.layer.pipe(Layer.provide(layerConfig({})), Layer.provide(layerCollector([]))),
+        ServerLogger.layer.pipe(
+          Layer.provide(layerConfig({})),
+          Layer.provide(layerCollector([])),
+          Layer.provide(layerNoLogFile),
+        ),
       ),
       Effect.provideService(Console.Console, testConsole),
     );
     return printed.join("\n");
   });
+
+// The noop file system fails to open the log file, so the logger stays console-only.
+const layerNoLogFile = Layer.merge(FileSystem.layerNoop({}), Path.layer);
 
 describe("ServerLoggerLive", () => {
   it.effect("prints a cause passed as a log field instead of collapsing it", () =>
@@ -179,13 +139,4 @@ describe("ServerLoggerLive", () => {
       assert.notInclude(output, "secret-token-value");
     }),
   );
-
-  describe("startup pairing URL", () => {
-    const pairingToken = "PAIRTOKEN7Q4K9";
-    const pairingUrl = `http://localhost:3773/pair#token=${pairingToken}`;
-    const announce = announceStartupPairingUrl(pairingUrl).pipe(
-      Effect.andThen(logBrowserAutoOpenUnavailable),
-    );
-
-  });
 });

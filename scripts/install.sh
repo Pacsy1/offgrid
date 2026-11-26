@@ -2,7 +2,7 @@
 # Installs the Offgrid CLI from a GitHub Release archive. Needs only sh, tar,
 # sha256sum or shasum, and curl or wget; no Node, npm, or compiler.
 #
-#   curl -fsSL https://t3.codes/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | sh
 #
 # Environment:
 #   OFFGRID_CHANNEL           release train to follow: stable, nightly, or preview
@@ -17,7 +17,7 @@
 # instead of fetching the release again.
 set -eu
 
-repo="pingdotgg/t3code"
+repo="Pacsy1/offgrid"
 base_url="${OFFGRID_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
 offgrid_home="${OFFGRID_HOME:-$HOME/.t3}"
 case "$offgrid_home" in
@@ -171,7 +171,7 @@ case "$(uname -m)" in
   *) fail "unsupported architecture $(uname -m)" ;;
 esac
 if [ "${platform}-${arch}" = darwin-x64 ]; then
-  fail "there is no offgrid CLI for Intel Macs. Install the desktop app from https://t3.codes/download, or run a server from source: https://github.com/${repo}/blob/main/docs/user/install.md#intel-macs"
+  fail "there is no offgrid CLI for Intel Macs. Install the desktop app from https://github.com/Pacsy1/offgrid/releases/latest, or run a server from source: https://github.com/${repo}/blob/main/docs/user/install.md#intel-macs"
 fi
 command -v tar >/dev/null 2>&1 || fail "tar is required"
 if command -v sha256sum >/dev/null 2>&1; then

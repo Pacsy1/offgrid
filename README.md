@@ -15,6 +15,14 @@ Offgrid gives the coding agents on your computer one fast interface. Run Claude 
 and others side by side, review what they change, and keep working from your phone. It does all of
 this without reporting anything about you or your work to anyone.
 
+> **Correction (1.0.0).** Versions up to 0.1.12 removed T3 Code's analytics but still pointed at
+> T3 Code's hosted services: the model list came from T3 Code's repository, copied links went to
+> `app.t3.codes`, update and install links pointed at T3 Code's releases, and the mobile app was set
+> up to sign in through `clerk.t3.codes` and check T3 Code's update server. The relay in
+> `infra/relay` also still shipped traces to Axiom. None of this was telemetry, but it contradicted
+> "nothing sent home," and I should have caught it. Version 1.0.0 removes all of it, and
+> [Data Offgrid sends](./docs/user/telemetry.md) now lists every connection the app makes.
+
 ## Why Offgrid
 
 ### No telemetry
@@ -29,13 +37,21 @@ taken out, not just turned off:
 - **No crash uploads.** Crashes stay on your machine; nothing uploads stack traces or source maps.
 - **No reports about your agents.** Agents are never asked to file feedback about Offgrid on your
   behalf.
+- **No T3 Code servers.** Offgrid contacts nothing run by T3 Code. It runs no hosted service of its
+  own either, so Offgrid Connect and hosted links stay off unless you deploy your own.
 
 Because the code is gone rather than switched off, there is no setting to forget, no environment
 variable to export, and no update that can quietly turn it back on.
 
+On its own, Offgrid only downloads its model list from this repository, checks this repository's
+releases for updates, and fetches the public LiteLLM price list to estimate usage costs. Everything
+else, such as your agents talking to their providers, happens because you use it.
+[Data Offgrid sends](./docs/user/telemetry.md) has the details.
+
 ### Everything T3 Code does well
 
-Offgrid keeps up with upstream releases, so you get its features with the telemetry stripped out:
+Offgrid is versioned on its own, starting at 1.0.0, and carries T3 Code's features with the
+telemetry stripped out:
 
 - **Your own subscriptions.** Offgrid does not resell tokens. It drives the agents you are already
   signed in to.

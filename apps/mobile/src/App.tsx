@@ -143,7 +143,7 @@ const appLinking = {
     "offgrid://",
     "offgrid-dev://",
     "offgrid-preview://",
-    DEFAULT_HOSTED_APP_URL,
+    ...(DEFAULT_HOSTED_APP_URL ? [DEFAULT_HOSTED_APP_URL] : []),
   ],
   config: { initialRouteName: "Home" },
   filter: (url: string) => shouldHandleAppLink(url, hasCloudPublicConfig()),

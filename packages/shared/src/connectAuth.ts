@@ -7,7 +7,14 @@ const CONNECT_LOOPBACK_CALLBACK_PATH = "/callback";
 
 const CONNECT_AUTHORIZE_PATH = "/connect";
 
-export const DEFAULT_HOSTED_APP_URL = "https://app.t3.codes";
+/**
+ * Offgrid runs no hosted app, so hosted links and Offgrid Connect stay off unless a build or
+ * server sets its own address (OFFGRID_HOSTED_APP_URL / VITE_HOSTED_APP_URL).
+ */
+export const DEFAULT_HOSTED_APP_URL: string | undefined = undefined;
+
+/** Links copied from T3 Code before the fork still parse; Offgrid never contacts this host. */
+export const LEGACY_HOSTED_APP_URL = "https://app.t3.codes";
 
 export const CONNECT_OAUTH_SCOPES = ["openid", "profile", "email", "offline_access"] as const;
 

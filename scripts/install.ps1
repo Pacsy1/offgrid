@@ -1,7 +1,7 @@
 # Installs the Offgrid CLI from a GitHub Release archive on Windows. Needs
 # only PowerShell 5.1+; no Node, npm, or compiler.
 #
-#   irm https://t3.codes/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.ps1 | iex
 #
 # Environment:
 #   OFFGRID_CHANNEL           release train to follow: stable, nightly, or preview
@@ -16,7 +16,7 @@
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$repo = "pingdotgg/t3code"
+$repo = "Pacsy1/offgrid"
 $baseUrl = if ($env:OFFGRID_RELEASE_BASE_URL) { $env:OFFGRID_RELEASE_BASE_URL.TrimEnd("/") } else { "https://github.com/$repo/releases/download" }
 $offgridHome = if ($env:OFFGRID_HOME) { $env:OFFGRID_HOME } else { Join-Path $HOME ".t3" }
 $binDir = if ($env:OFFGRID_INSTALL_BIN_DIR) { $env:OFFGRID_INSTALL_BIN_DIR } else { Join-Path $HOME ".local\bin" }

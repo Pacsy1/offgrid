@@ -24,7 +24,7 @@ export interface ThreadReferenceCopyTarget {
 }
 
 /**
- * A link that opens the thread from anywhere, through `hostedAppUrl`, this build's hosted app. It
+ * A link that opens the thread through `hostedAppUrl`, a configured hosted app, or else an app link. It
  * pastes back as a chip into any composer whose agent reads that thread's machine.
  */
 export function threadChipCopyTarget(
@@ -53,7 +53,7 @@ export function resolveThreadReferenceCopyTarget(
     readonly openPanelPullRequestUrl?: string | null | undefined;
     readonly pullRequests?: ReadonlyArray<ThreadPullRequestLink> | undefined;
     readonly linkedPullRequestUrl?: string | null;
-    readonly hostedAppUrl?: string;
+    readonly hostedAppUrl?: string | undefined;
   },
   resolve: MFunctionType = mFallback,
 ): ThreadReferenceCopyTarget | null {

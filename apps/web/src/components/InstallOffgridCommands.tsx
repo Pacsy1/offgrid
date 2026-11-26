@@ -17,9 +17,9 @@ export function InstallOffgridCommands({
   return (
     <div className={cn("space-y-2", className)}>
       <p className="text-xs text-muted-foreground">macOS, Linux</p>
-      <CommandBlock command="curl -fsSL https://t3.codes/install.sh | sh" />
+      <CommandBlock command="curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | sh" />
       <p className="text-xs text-muted-foreground">Windows (PowerShell)</p>
-      <CommandBlock command="irm https://t3.codes/install.ps1 | iex" />
+      <CommandBlock command="irm https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.ps1 | iex" />
       <p className="text-xs text-muted-foreground">
         <T>Then</T>
       </p>
@@ -27,8 +27,8 @@ export function InstallOffgridCommands({
       <p className="text-xs text-muted-foreground">
         <T>
           Skip the install if you already have <code className="font-mono">offgrid</code>. If{" "}
-          <code className="font-mono">offgrid</code> is not found after installing, add the folder the
-          installer names to your PATH.
+          <code className="font-mono">offgrid</code> is not found after installing, add the folder
+          the installer names to your PATH.
         </T>
       </p>
     </div>

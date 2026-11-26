@@ -3974,7 +3974,7 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
     description:
       "Offgrid is an open-source desktop app for coding agents. Work with your existing agent subscriptions, review code changes, and run commands in your projects. Connect from desktop, web, or mobile to continue working remotely.",
     license: "MIT",
-    homepage: "https://t3.codes",
+    homepage: "https://github.com/Pacsy1/offgrid",
     author: "Offgrid",
     main: "apps/desktop/dist-electron/boot.cjs",
     build: yield* createBuildConfig(

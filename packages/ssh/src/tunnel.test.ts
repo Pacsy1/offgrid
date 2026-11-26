@@ -337,7 +337,7 @@ describe("ssh tunnel scripts", () => {
           assert.include(result.stderr, "download attempt");
           // A bare curl error does not tell the user that offgrid itself could not be downloaded.
           assert.include(result.stderr, ARCHIVE.archiveVersion);
-          assert.include(result.stderr, "https://github.com/pingdotgg/t3code/releases/download");
+          assert.include(result.stderr, "https://github.com/Pacsy1/offgrid/releases/download");
         } else {
           assert.notInclude(result.stderr, "download attempt");
           assert.include(result.stderr, "has no offgrid release archive.");
@@ -590,7 +590,9 @@ describe("ssh tunnel scripts", () => {
               },
               stdin: {
                 stream: Stream.make(
-                  new TextEncoder().encode('printf "%s:%s" "${OFFGRID_SSH_LOGIN_ENV:-missing}" "$1"'),
+                  new TextEncoder().encode(
+                    'printf "%s:%s" "${OFFGRID_SSH_LOGIN_ENV:-missing}" "$1"',
+                  ),
                 ),
                 endOnDone: true,
               },

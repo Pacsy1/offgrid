@@ -524,11 +524,14 @@ export const OFFGRID_CONNECT_TROUBLESHOOTING_SECTIONS = [
   "the-host-runs-an-older-offgrid",
   "offgrid-connect-returned-an-error",
 ] as const;
-export type OffgridConnectTroubleshootingSection = (typeof OFFGRID_CONNECT_TROUBLESHOOTING_SECTIONS)[number];
+export type OffgridConnectTroubleshootingSection =
+  (typeof OFFGRID_CONNECT_TROUBLESHOOTING_SECTIONS)[number];
 
 /** Clients, the CLI, and server logs link here as "More info". */
-export function offgridConnectTroubleshootingUrl(section: OffgridConnectTroubleshootingSection): string {
-  return `https://github.com/pingdotgg/t3code/blob/main/docs/user/offgrid-connect-troubleshooting.md#${section}`;
+export function offgridConnectTroubleshootingUrl(
+  section: OffgridConnectTroubleshootingSection,
+): string {
+  return `https://github.com/Pacsy1/offgrid/blob/main/docs/user/offgrid-connect-troubleshooting.md#${section}`;
 }
 
 const REACHABILITY_SECTION = {

@@ -549,7 +549,7 @@ if ! offgrid_runtime_ready; then
     elif command -v wget >/dev/null 2>&1; then wget -q --timeout=30 --tries=1 "$1" -O "$2"
     else printf 'Remote host needs curl or wget to download %s.\\n' "$OFFGRID_ARCHIVE" >&2; exit 1
     fi || {
-      printf 'Could not download offgrid %s from %s. If this host cannot reach it, install offgrid %s on it with https://t3.codes/install.sh (OFFGRID_VERSION=%s; OFFGRID_RELEASE_BASE_URL selects a mirror).\\n' "$OFFGRID_ARCHIVE_VERSION" "$1" "$OFFGRID_ARCHIVE_VERSION" "$OFFGRID_ARCHIVE_VERSION" >&2
+      printf 'Could not download offgrid %s from %s. If this host cannot reach it, install offgrid %s on it with https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh (OFFGRID_VERSION=%s; OFFGRID_RELEASE_BASE_URL selects a mirror).\\n' "$OFFGRID_ARCHIVE_VERSION" "$1" "$OFFGRID_ARCHIVE_VERSION" "$OFFGRID_ARCHIVE_VERSION" >&2
       exit 1
     }
   }

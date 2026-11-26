@@ -41,11 +41,11 @@ It shouldn't anymore. Offgrid drives Claude through Anthropic's Agent SDK, and A
 
 ## How do I use Offgrid remotely?
 
-Your agents run wherever Offgrid runs: your desktop, a server, a VPS. You connect to it from anywhere. I do this constantly. Less than 5% of my prompts run on my laptop. Run `offgrid up` on that machine and you get really good remote support. Offgrid Connect is the easy path. LAN pairing and Tailscale work too, and [app.t3.codes](https://app.t3.codes) is the web client. [Remote access](./remote-access.md)
+Your agents run wherever Offgrid runs: your desktop, a server, a VPS. You connect to it from anywhere. I do this constantly. Less than 5% of my prompts run on my laptop. Run `offgrid up` on that machine and you get really good remote support. Pair over your local network or Tailscale, and open the server's address in a browser to use the web client. Offgrid runs no hosted service, so Offgrid Connect needs a relay you deploy yourself. [Remote access](./remote-access.md)
 
 ## How do I use Offgrid on my phone?
 
-Get the [iOS](https://apps.apple.com/us/app/t3-code-remote-claude-more/id6787819824) or [Android](https://play.google.com/store/apps/details?id=com.t3tools.t3code) app, then connect it to your computer with Offgrid Connect or a pairing link. The phone is a remote. Your computer does the work and needs to stay on. [Mobile setup](./install.md#mobile-app) · [Remote access](./remote-access.md)
+Offgrid has no app in the App Store or Google Play yet. You can build the mobile app from `apps/mobile` and connect it to your computer with a pairing link. The phone is a remote. Your computer does the work and needs to stay on. [Mobile setup](./install.md#mobile-app) · [Remote access](./remote-access.md)
 
 ## Why does Offgrid Connect keep disconnecting?
 
@@ -73,7 +73,7 @@ No. Offgrid is a serious developer tool. Locally runnable models are not capable
 
 ## Does my code go to Offgrid servers?
 
-No. Your code and prompts go from your machine to your provider (Anthropic, OpenAI, etc.), not to us. With Offgrid Connect, traffic rides a Cloudflare tunnel (`cloudflared` on your machine). Our relay sets up the link. It does not proxy your HTTP or WebSocket sessions. Offgrid sends no telemetry of any kind. [Data Offgrid sends](./telemetry.md)
+No. There are no Offgrid servers. Your code and prompts go from your machine to your provider (Anthropic, OpenAI, etc.). Offgrid sends no telemetry of any kind and contacts nothing run by T3 Code. [Data Offgrid sends](./telemetry.md)
 
 ## Worktrees are eating my disk. How do I clean them up?
 

@@ -51,17 +51,19 @@ export const cascadeRebaseStack = Effect.fn("cascadeRebaseStack")(function* (inp
   const { token } = yield* appAccess.credentialFor(input.host, input.repository);
   const first = input.layers[0];
   if (first === undefined) return 0;
-  const directory = yield* fileSystem.makeTempDirectoryScoped({ prefix: "offgrid-stack-rebase-" }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new GitHubStackRebaseGitError({
-          step: "preparing",
-          number: first.number,
-          completed: 0,
-          cause,
-        }),
-    ),
-  );
+  const directory = yield* fileSystem
+    .makeTempDirectoryScoped({ prefix: "offgrid-stack-rebase-" })
+    .pipe(
+      Effect.mapError(
+        (cause) =>
+          new GitHubStackRebaseGitError({
+            step: "preparing",
+            number: first.number,
+            completed: 0,
+            cause,
+          }),
+      ),
+    );
   // Keep the token in this process's header, outside URLs, argv and git config.
   const remote = input.remote ?? remoteUrl(input.host, input.repository);
   const authorization = `AUTHORIZATION: basic ${Base64.encode(`x-access-token:${Redacted.value(token)}`)}`;
@@ -73,7 +75,7 @@ export const cascadeRebaseStack = Effect.fn("cascadeRebaseStack")(function* (inp
     GIT_CONFIG_KEY_1: "user.name",
     GIT_CONFIG_VALUE_1: "Offgrid",
     GIT_CONFIG_KEY_2: "user.email",
-    GIT_CONFIG_VALUE_2: "noreply@t3.codes",
+    GIT_CONFIG_VALUE_2: "noreply@offgrid.invalid",
   };
   const git = (args: ReadonlyArray<string>, allowNonZeroExit = false) =>
     process.run({

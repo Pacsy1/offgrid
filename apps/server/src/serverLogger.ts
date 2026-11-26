@@ -3,6 +3,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
+import * as Path from "effect/Path";
 import * as Redactable from "effect/Redactable";
 import * as References from "effect/References";
 
@@ -47,8 +48,15 @@ function prettyCauseFields(value: unknown): unknown {
 
 export const layer = Effect.gen(function* () {
   const config = yield* ServerConfig.ServerConfig;
+  const path = yield* Path.Path;
+  const fileLogger = yield* SharedObservability.localLogFileLogger(
+    path.join(config.logsDir, "server.log"),
+  ).pipe(
+    Effect.map((logger) => [redactingCredentials(logger)]),
+    Effect.orElseSucceed(() => []),
+  );
   return Layer.mergeAll(
-    Logger.layer([consolePretty()], { mergeWithExisting: false }),
+    Logger.layer([consolePretty(), ...fileLogger], { mergeWithExisting: false }),
     Layer.succeed(References.MinimumLogLevel, config.logLevel),
   );
 }).pipe(Layer.unwrap);

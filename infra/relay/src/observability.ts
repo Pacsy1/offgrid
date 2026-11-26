@@ -1,56 +1,9 @@
-import * as Alchemy from "alchemy";
-import * as Axiom from "@alchemy.run/axiom";
-import * as Output from "alchemy/Output";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Tracer from "effect/Tracer";
-
-import { relayResourceNameForStage } from "./deploymentConfig.ts";
-import { RelayMonitoring } from "./monitoring.ts";
-
-const relayRecentSpansQuery = (dataset: string) =>
-  [
-    `['${dataset}']`,
-    `| where isnotnull(span_id) or isnotnull(trace_id)`,
-    `| extend requestMethod = column_ifexists('attributes.http.request.method', ''), path = column_ifexists('attributes.url.path', ''), endpoint = column_ifexists('attributes.http.route', ''), statusCode = column_ifexists('attributes.http.response.status_code', 0), customAttributes = column_ifexists('attributes.custom', dynamic({}))`,
-    `| extend userId = customAttributes['user']['id']`,
-    `| project _time, name, trace_id, span_id, duration, requestMethod, path, statusCode, endpoint, userId`,
-    `| order by _time desc`,
-    `| limit 200`,
-  ].join("\n");
-
-export const RelayObservability = Effect.gen(function* () {
-  const { stage } = yield* Alchemy.Stack;
-  const traces = yield* Axiom.Dataset("RelayTracesDataset", {
-    name: relayResourceNameForStage("offgrid-relay-traces", stage),
-    kind: "otel:traces:v1",
-    description: "Offgrid relay Worker HTTP request spans.",
-    retentionDays: 30,
-    useRetentionPeriod: true,
-  });
-
-  const workerIngestToken = yield* Axiom.ApiToken("RelayWorkerAxiomIngestToken", {
-    name: relayResourceNameForStage("offgrid-relay-otel-ingest", stage),
-    description: "Owned by Alchemy. Scoped OTLP ingest token for relay HTTP spans.",
-    datasetCapabilities: Output.map(traces.name, (dataset) => ({
-      [dataset]: { ingest: ["create" as const] },
-    })),
-  });
-
-  yield* Axiom.View("RelayRecentSpansView", {
-    name: relayResourceNameForStage("offgrid-relay-recent-spans", stage),
-    description: "Recent relay HTTP request spans.",
-    datasets: [traces.name],
-    aplQuery: Output.map(traces.name, relayRecentSpansQuery),
-  });
-
-  yield* RelayMonitoring(traces);
-
-  return { traces, workerIngestToken } as const;
-});
 
 export const withSpanAttributes =
   (attributes: Record<string, unknown>) =>

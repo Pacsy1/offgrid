@@ -149,7 +149,7 @@ export const OffgridProjectFile = Schema.Struct({
 }).annotate({
   title: "Offgrid project file",
   description:
-    "Checked-in project configuration for Offgrid (offgrid.json at the repository root). See https://t3.codes for documentation.",
+    "Checked-in project configuration for Offgrid (offgrid.json at the repository root). See https://github.com/Pacsy1/offgrid for documentation.",
 });
 export type OffgridProjectFile = typeof OffgridProjectFile.Type;
 

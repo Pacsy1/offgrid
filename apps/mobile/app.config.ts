@@ -55,7 +55,6 @@ const VARIANT_CONFIG = {
     scheme: "offgrid-dev",
     iosBundleIdentifier: "com.offgrid.offgrid.dev",
     androidPackage: "com.offgrid.offgrid.dev",
-    relyingParty: "clerk.t3.codes",
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
@@ -63,7 +62,6 @@ const VARIANT_CONFIG = {
     scheme: "offgrid-preview",
     iosBundleIdentifier: "com.offgrid.offgrid.preview",
     androidPackage: "com.offgrid.offgrid.preview",
-    relyingParty: "clerk.t3.codes",
     assets: PREVIEW_ASSETS,
   },
   production: {
@@ -71,7 +69,6 @@ const VARIANT_CONFIG = {
     scheme: "offgrid",
     iosBundleIdentifier: "com.offgrid.offgrid",
     androidPackage: "com.offgrid.offgrid",
-    relyingParty: "clerk.t3.codes",
     assets: RELEASE_ASSETS,
   },
 } as const;
@@ -90,8 +87,13 @@ function resolveAppVariant(value: string | undefined): AppVariant {
 }
 
 const variant = VARIANT_CONFIG[APP_VARIANT];
-// Copied thread links open the app. app.t3.codes/.well-known lists every variant's identifiers.
-const HOSTED_APP_HOST = "app.t3.codes";
+// Offgrid has no hosted app or sign-in domain of its own. A build that runs one sets these, and
+// its .well-known files must list every variant's identifiers.
+const HOSTED_APP_HOST = repoEnv.OFFGRID_HOSTED_APP_HOST?.trim() || undefined;
+const SIGN_IN_RELYING_PARTY = repoEnv.OFFGRID_CLERK_RELYING_PARTY?.trim() || undefined;
+const APPLE_TEAM_ID = repoEnv.OFFGRID_APPLE_TEAM_ID?.trim() || undefined;
+const EXPO_OWNER = repoEnv.OFFGRID_EXPO_OWNER?.trim() || undefined;
+const EAS_PROJECT_ID = repoEnv.OFFGRID_EAS_PROJECT_ID?.trim() || undefined;
 const iosBundleIdentifier = isIosPersonalTeamBuild
   ? personalTeamBundleIdentifier!
   : variant.iosBundleIdentifier;
@@ -218,8 +220,9 @@ const config: ExpoConfig = {
   icon: variant.assets.appIcon,
   userInterfaceStyle: "automatic",
   updates: {
-    enabled: repoEnv.OFFGRID_MOBILE_UPDATES_ENABLED !== "0",
-    url: "https://u.expo.dev/d763fcb8-d37c-41ea-a773-b54a0ab4a454",
+    // Over-the-air updates need an EAS project; without one the app never checks for them.
+    enabled: EAS_PROJECT_ID !== undefined && repoEnv.OFFGRID_MOBILE_UPDATES_ENABLED !== "0",
+    ...(EAS_PROJECT_ID ? { url: `https://u.expo.dev/${EAS_PROJECT_ID}` } : {}),
     checkAutomatically: "ON_LOAD",
     fallbackToCacheTimeout: 0,
   },
@@ -229,11 +232,12 @@ const config: ExpoConfig = {
     requireFullScreen: process.env.OFFGRID_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
     // Avoid Personal Team fallback: it cannot sign App Groups, Apple sign-in or push entitlements.
-    appleTeamId: "ARK85ZXQ4Z",
+    ...(APPLE_TEAM_ID ? { appleTeamId: APPLE_TEAM_ID } : {}),
     associatedDomains: [
-      `applinks:${variant.relyingParty}`,
-      `webcredentials:${variant.relyingParty}`,
-      `applinks:${HOSTED_APP_HOST}`,
+      ...(SIGN_IN_RELYING_PARTY
+        ? [`applinks:${SIGN_IN_RELYING_PARTY}`, `webcredentials:${SIGN_IN_RELYING_PARTY}`]
+        : []),
+      ...(HOSTED_APP_HOST ? [`applinks:${HOSTED_APP_HOST}`] : []),
     ],
     entitlements: {
       "keychain-access-groups": [`$(AppIdentifierPrefix)${variant.iosBundleIdentifier}`],
@@ -286,14 +290,16 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: true,
     // expo-sensors declares this for its pedometer, which the app does not use.
     blockedPermissions: ["android.permission.ACTIVITY_RECOGNITION"],
-    intentFilters: [
-      {
-        action: "VIEW",
-        autoVerify: true,
-        data: [{ scheme: "https", host: HOSTED_APP_HOST, pathPrefix: "/threads/" }],
-        category: ["BROWSABLE", "DEFAULT"],
-      },
-    ],
+    intentFilters: HOSTED_APP_HOST
+      ? [
+          {
+            action: "VIEW",
+            autoVerify: true,
+            data: [{ scheme: "https", host: HOSTED_APP_HOST, pathPrefix: "/threads/" }],
+            category: ["BROWSABLE", "DEFAULT"],
+          },
+        ]
+      : [],
   },
   web: {
     favicon: variant.assets.appIcon,
@@ -456,11 +462,9 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID,
     EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID,
     EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: repoEnv.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME,
-    eas: {
-      projectId: "d763fcb8-d37c-41ea-a773-b54a0ab4a454",
-    },
+    ...(EAS_PROJECT_ID ? { eas: { projectId: EAS_PROJECT_ID } } : {}),
   },
-  owner: "pingdotgg",
+  ...(EXPO_OWNER ? { owner: EXPO_OWNER } : {}),
   experiments: {
     // Metro only runs babel-plugin-react-compiler when this is set; see src/reactCompilerCoverage.test.ts.
     reactCompiler: true,

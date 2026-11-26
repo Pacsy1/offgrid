@@ -78,7 +78,7 @@ async function download(url, file) {
 async function install(dir, key) {
   const archive = `offgrid-${version}-${key}.${process.platform === "win32" ? "zip" : "tar.gz"}`;
   const base = (
-    process.env.OFFGRID_RELEASE_BASE_URL || "https://github.com/pingdotgg/t3code/releases/download"
+    process.env.OFFGRID_RELEASE_BASE_URL || "https://github.com/Pacsy1/offgrid/releases/download"
   ).replace(/\/+$/, "");
   const sums = await (await get(`${base}/v${version}/SHA256SUMS`)).text();
   const expected = /^([0-9a-f]{64})\s+\*?(.+)$/im;
@@ -179,7 +179,7 @@ async function main() {
   if (!SUPPORTED.includes(key)) {
     throw new Error(
       `no Offgrid CLI build is available for ${key} (supported: ${SUPPORTED.join(", ")}).\n` +
-        "The desktop app is at https://github.com/pingdotgg/t3code/releases",
+        "The desktop app is at https://github.com/Pacsy1/offgrid/releases",
     );
   }
   const dir = path.join(offgridHome(), "runtime", "versions", version);

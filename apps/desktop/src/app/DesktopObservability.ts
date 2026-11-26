@@ -1,4 +1,6 @@
 import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@offgrid/contracts";
+import * as SharedObservability from "@offgrid/shared/observability";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -517,10 +519,44 @@ const layerBackendOutputLogFactory = Layer.effect(
   }),
 );
 
-const layerLogger = Logger.layer([Logger.consolePretty()], { mergeWithExisting: false });
+const layerLogger = Layer.unwrap(
+  Effect.gen(function* () {
+    const environment = yield* DesktopEnvironment.DesktopEnvironment;
+    const fileLogger = yield* SharedObservability.localLogFileLogger(
+      environment.path.join(environment.logDir, "desktop.log"),
+    ).pipe(
+      Effect.map((logger) => [logger]),
+      Effect.orElseSucceed(() => []),
+    );
+    return Logger.layer([Logger.consolePretty(), ...fileLogger], { mergeWithExisting: false });
+  }),
+);
+
+const MAIN_THREAD_CHECK_INTERVAL_MS = 1000;
+const MAIN_THREAD_STALL_LOG_MS = 2000;
+
+// Windows closes a window whose main thread stops pumping messages; this records the shorter
+// stalls that recover, so the log shows when they happen and what ran around them.
+const layerMainThreadStallLog = Layer.effectDiscard(
+  Effect.gen(function* () {
+    let last = yield* Clock.currentTimeMillis;
+    yield* Effect.sleep(MAIN_THREAD_CHECK_INTERVAL_MS).pipe(
+      Effect.andThen(Clock.currentTimeMillis),
+      Effect.flatMap((now) => {
+        const blockedMs = now - last - MAIN_THREAD_CHECK_INTERVAL_MS;
+        last = now;
+        return blockedMs >= MAIN_THREAD_STALL_LOG_MS
+          ? Effect.logWarning(`desktop main thread was blocked for ${blockedMs} ms`)
+          : Effect.void;
+      }),
+      Effect.forever,
+      Effect.forkScoped,
+    );
+  }),
+);
 
 export const layer = Layer.mergeAll(
   layerBackendOutputLogFactory,
-  layerLogger,
+  layerMainThreadStallLog,
   Layer.succeed(References.MinimumLogLevel, "Info"),
-);
+).pipe(Layer.provideMerge(layerLogger));

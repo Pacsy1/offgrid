@@ -1,5 +1,4 @@
 import * as Alchemy from "alchemy";
-import * as Axiom from "@alchemy.run/axiom";
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Drizzle from "@alchemy.run/drizzle/Postgres";
 import * as Config from "effect/Config";
@@ -31,7 +30,6 @@ import {
 import * as CloudMintSigner from "./auth/CloudMintSigner.ts";
 import * as RelayHttpApi from "./http/Api.ts";
 import { ManagedEndpointZone, RelayApiZone, RelayDeploymentConfig } from "./zone.ts";
-import { RelayObservability } from "./observability.ts";
 import * as Observability from "./observability.ts";
 import * as DeliveryAttempts from "./agentActivity/DeliveryAttempts.ts";
 import * as AgentActivityRows from "./agentActivity/AgentActivityRows.ts";
@@ -127,13 +125,8 @@ export const layer = Api.make(
       // to PlanetScale `us-west` the request pays that distance once.
       placement: { region: "aws:us-west-2" },
       domain: relayPublicDomain,
-      // Workers Logs bills per GB, and every request, queue batch, and DO call is
-      // an invocation log. Axiom traces carry the full detail; keep a sample for
-      // crashes and limit errors that never export a span.
-      observability: {
-        enabled: true,
-        logs: { enabled: true, invocationLogs: true, headSamplingRate: 0.01 },
-      },
+      // No Workers Logs or trace export: the relay keeps no request logs.
+      observability: { enabled: false },
     })),
     Effect.orDie,
   ),
@@ -147,7 +140,6 @@ export const layer = Api.make(
     const relayApiZone = yield* RelayApiZone;
     const managedEndpointZone = yield* ManagedEndpointZone;
     const randomApnsDeliveryJobSigningSecret = yield* ApnsDeliveryJobSigningSecret;
-    yield* RelayObservability;
 
     const apnsEnabled = yield* Config.Boolean("APNS_ENABLED").pipe(Config.withDefault(true));
     const apnsCredentials = apnsEnabled
@@ -525,17 +517,6 @@ export const layer = Api.make(
         // Disable the duplicate runtime span; ours applies route/header/token redaction and rejects sender traceparent.
         Layer.provideMerge(
           Alchemy.Telemetry.layer(Layer.succeed(HttpMiddleware.TracerDisabledWhen)(() => true)),
-        ),
-        Layer.provideMerge(
-          Layer.unwrap(
-            Effect.map(RelayObservability, (observability) =>
-              Axiom.Telemetry({
-                serviceName: "offgrid-relay",
-                token: observability.workerIngestToken,
-                traces: observability.traces,
-              }),
-            ),
-          ),
         ),
       ),
     ),

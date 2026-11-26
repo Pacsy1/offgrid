@@ -12,7 +12,6 @@ import * as Schema from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
 declare const __OFFGRID_BUILD_RELAY_URL__: string | undefined;
-declare const __OFFGRID_BUILD_CHANNEL__: "nightly" | "latest" | undefined;
 declare const __OFFGRID_BUILD_CLERK_PUBLISHABLE_KEY__: string | undefined;
 declare const __OFFGRID_BUILD_CLERK_CLI_OAUTH_CLIENT_ID__: string | undefined;
 
@@ -36,15 +35,6 @@ function validateRelayUrl(value: string) {
 
 function readBuildTimeValue(value: string | undefined): string {
   return typeof value === "undefined" ? "" : value.trim();
-}
-
-function normalizeSecureUrl(value: string): string | null {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
 }
 
 const buildTimeRelayUrl =
@@ -72,20 +62,7 @@ export const relayUrlConfig = makeRelayUrlConfig();
 
 export const hostedAppUrlConfig = makePublicValueConfig(
   "OFFGRID_HOSTED_APP_URL",
-  DEFAULT_HOSTED_APP_URL,
-).pipe(Config.mapEffect(validateHostedAppUrl));
-
-const NIGHTLY_HOSTED_APP_URL = "https://nightly.app.t3.codes";
-
-/**
- * Where agent sign-ins on the Offgrid Connect address are approved. A nightly build defaults to the
- * nightly hosted app, which ships the same approval page; app.t3.codes serves stable.
- */
-export const agentApprovalAppUrlConfig = makePublicValueConfig(
-  "OFFGRID_HOSTED_APP_URL",
-  typeof __OFFGRID_BUILD_CHANNEL__ !== "undefined" && __OFFGRID_BUILD_CHANNEL__ === "nightly"
-    ? NIGHTLY_HOSTED_APP_URL
-    : DEFAULT_HOSTED_APP_URL,
+  DEFAULT_HOSTED_APP_URL ?? "",
 ).pipe(Config.mapEffect(validateHostedAppUrl));
 
 function validateHostedAppUrl(value: string) {
