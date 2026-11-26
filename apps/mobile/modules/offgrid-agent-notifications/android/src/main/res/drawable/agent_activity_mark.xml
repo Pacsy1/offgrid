@@ -1,0 +1,9 @@
+<!-- The Offgrid mark, full bleed, so it renders as large as other apps' status bar icons. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="192" android:viewportHeight="192">
+    <group android:translateX="-32" android:translateY="-30">
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M208,134A88,88 0,1 1,120 46V92A42,42 0,1 0,162 134ZM182,30H214A10,10 0,0 1,224 40V72A10,10 0,0 1,214 82H182A10,10 0,0 1,172 72V40A10,10 0,0 1,182 30Z" />
+    </group>
+</vector>

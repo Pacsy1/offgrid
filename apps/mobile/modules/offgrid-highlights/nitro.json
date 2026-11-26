@@ -1,0 +1,20 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["offgridhighlights"],
+  "ios": {
+    "iosModuleName": "OffgridHighlightsNative"
+  },
+  "android": {
+    "androidNamespace": ["offgridhighlights"],
+    "androidCxxLibName": "offgridhighlights"
+  },
+  "autolinking": {
+    "OffgridHighlights": {
+      "all": {
+        "language": "c++",
+        "implementationClassName": "HybridOffgridHighlights"
+      }
+    }
+  },
+  "ignorePaths": ["node_modules", "Vendor"]
+}

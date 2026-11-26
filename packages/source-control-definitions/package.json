@@ -1,0 +1,25 @@
+{
+  "name": "@offgrid/source-control-definitions",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./registry": {
+      "types": "./src/registry.ts",
+      "import": "./src/registry.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "effect-tsgo tsrs --noEmit"
+  },
+  "dependencies": {
+    "@offgrid/source-control-azure-devops": "workspace:*",
+    "@offgrid/source-control-bitbucket": "workspace:*",
+    "@offgrid/source-control-core": "workspace:*",
+    "@offgrid/source-control-cursor-origin": "workspace:*",
+    "@offgrid/source-control-forgejo": "workspace:*",
+    "@offgrid/source-control-gitcafe": "workspace:*",
+    "@offgrid/source-control-github": "workspace:*",
+    "@offgrid/source-control-gitlab": "workspace:*",
+    "@offgrid/source-control-tanstack-source": "workspace:*"
+  }
+}

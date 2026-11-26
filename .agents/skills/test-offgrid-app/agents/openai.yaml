@@ -1,0 +1,4 @@
+interface:
+  display_name: "Offgrid App Testing"
+  short_description: "Test web and desktop in Offgrid's Browser panel"
+  default_prompt: "Use $test-offgrid-app to verify the affected web or desktop flow through Offgrid's Browser panel."

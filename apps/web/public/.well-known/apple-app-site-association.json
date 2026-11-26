@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "ARK85ZXQ4Z.com.offgrid.offgrid",
+          "ARK85ZXQ4Z.com.offgrid.offgrid.preview",
+          "ARK85ZXQ4Z.com.offgrid.offgrid.dev"
+        ],
+        "components": [{ "/": "/threads/*" }]
+      }
+    ]
+  }
+}

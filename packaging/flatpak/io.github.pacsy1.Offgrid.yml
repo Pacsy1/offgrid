@@ -1,0 +1,55 @@
+# Built by .github/workflows/offgrid-release.yml from the release's .deb, which it saves next to
+# this file as offgrid.deb. The result is a single-file bundle attached to the GitHub release.
+app-id: io.github.pacsy1.Offgrid
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: "24.08"
+command: offgrid
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=x11
+  - --socket=pulseaudio
+  - --device=dri
+  # Projects, agent sign-ins, and Offgrid's own data all live in the home folder.
+  - --filesystem=home
+  # Agents, git, and other developer tools run on the host through flatpak-spawn.
+  - --talk-name=org.freedesktop.Flatpak
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.kde.StatusNotifierWatcher
+modules:
+  - name: offgrid
+    buildsystem: simple
+    sources:
+      - type: file
+        path: offgrid.deb
+      - type: file
+        path: offgrid-launcher.sh
+      - type: file
+        path: host-command.sh
+    build-commands:
+      - mkdir deb-root
+      - bsdtar -xOf offgrid.deb 'data.tar*' | bsdtar -xf - -C deb-root
+      # The folder carries the product name, such as "Offgrid (Beta)".
+      - mkdir -p /app/offgrid && cp -a deb-root/opt/*/. /app/offgrid/
+      - install -Dm755 offgrid-launcher.sh /app/bin/offgrid
+      - install -Dm755 host-command.sh /app/libexec/host-command
+      - |
+        for icon in deb-root/usr/share/icons/hicolor/*/apps/offgrid.png; do
+          size_dir="${icon%/apps/offgrid.png}"
+          install -Dm644 "$icon" "/app/share/icons/hicolor/${size_dir##*/}/apps/io.github.pacsy1.Offgrid.png"
+        done
+      - |
+        sed -e 's|^Exec=.*|Exec=offgrid %U|' -e 's|^Icon=.*|Icon=io.github.pacsy1.Offgrid|' \
+          deb-root/usr/share/applications/offgrid.desktop > io.github.pacsy1.Offgrid.desktop
+        install -Dm644 io.github.pacsy1.Offgrid.desktop /app/share/applications/io.github.pacsy1.Offgrid.desktop
+      - |
+        sed -e 's|<id>com.offgrid.offgrid</id>|<id>io.github.pacsy1.Offgrid</id>|' \
+          -e 's|<launchable type="desktop-id">offgrid.desktop</launchable>|<launchable type="desktop-id">io.github.pacsy1.Offgrid.desktop</launchable>|' \
+          -e 's|<icon type="stock">offgrid</icon>|<icon type="stock">io.github.pacsy1.Offgrid</icon>|' \
+          deb-root/usr/share/metainfo/com.offgrid.offgrid.metainfo.xml > io.github.pacsy1.Offgrid.metainfo.xml
+        install -Dm644 io.github.pacsy1.Offgrid.metainfo.xml /app/share/metainfo/io.github.pacsy1.Offgrid.metainfo.xml

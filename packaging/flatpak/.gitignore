@@ -1,0 +1,5 @@
+offgrid.deb
+build/
+repo/
+.flatpak-builder/
+*.flatpak

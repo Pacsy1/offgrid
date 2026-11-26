@@ -1,0 +1,7 @@
+src/
+pkg/
+*.AppImage
+*.pkg.tar.zst
+.SRCINFO
+offgrid-bin-*.png
+offgrid-bin-*-LICENSE

@@ -1,0 +1,77 @@
+name: Offgrid packages
+
+# Builds the Flatpak bundles and publishes the AUR package from a release's Linux installers.
+# The release workflow calls this after its builds; it can also be run by hand for a release.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, such as v0.1.12"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ inputs.tag }}
+
+jobs:
+  flatpak:
+    name: Flatpak ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            deb_arch: amd64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            deb_arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Download the release .deb
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release download "$TAG" --pattern "Offgrid-*-${{ matrix.deb_arch }}.deb" --output packaging/flatpak/offgrid.deb
+
+      - name: Install Flatpak tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      # Flathub supplies only the shared runtime here; Offgrid itself is not published there.
+      - name: Build the Flatpak bundle
+        working-directory: packaging/flatpak
+        run: |
+          flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean \
+            --repo=repo build io.github.pacsy1.Offgrid.yml
+          flatpak build-bundle --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
+            repo "Offgrid-${TAG#v}-${{ matrix.arch }}.flatpak" io.github.pacsy1.Offgrid
+
+      - name: Attach the bundle to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "$TAG" packaging/flatpak/Offgrid-*.flatpak --clobber
+
+  aur:
+    name: AUR
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      release_tag: ${{ inputs.tag }}
+    secrets: inherit

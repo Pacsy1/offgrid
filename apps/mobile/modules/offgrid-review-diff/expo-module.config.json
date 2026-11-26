@@ -1,0 +1,10 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["OffgridReviewDiffModule"],
+    "podspecPath": "OffgridReviewDiffNative.podspec"
+  },
+  "android": {
+    "modules": ["expo.modules.offgridreviewdiff.OffgridReviewDiffModule"]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["OffgridNativeControlsModule", "OffgridKeyboardCommandsModule"],
+    "appDelegateSubscribers": [
+      "OffgridWorkspaceOrientationSubscriber",
+      "OffgridMenuDismissTouchGateSubscriber",
+      "OffgridBackgroundGraceSubscriber"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.offgridnativecontrols.OffgridNativeControlsModule",
+      "expo.modules.offgridnativecontrols.OffgridWorkspaceNavigationModule",
+      "expo.modules.offgridnativecontrols.OffgridKeyboardCommandsModule",
+      "expo.modules.offgridnativecontrols.OffgridFoldPostureModule",
+      "expo.modules.offgridnativecontrols.OffgridSecretInputModule"
+    ]
+  }
+}
