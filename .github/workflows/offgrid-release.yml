@@ -119,6 +119,21 @@ jobs:
             --build-version "${TAG#v}" \
             --output-dir release-out
 
+      - name: Attach installers to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          shopt -s nullglob
+          files=(release-out/*.exe release-out/*.dmg release-out/*.AppImage release-out/*.deb)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::error::The build produced no installer."
+            ls -la release-out
+            exit 1
+          fi
+          gh release upload "$TAG" "${files[@]}" --clobber
+
       # The CLI archive reuses the server bundle, web client and resource monitor the installer built.
       - name: Apply web client branding for the CLI archive
         if: matrix.cli
@@ -129,7 +144,7 @@ jobs:
         if: matrix.cli
         shell: bash
         env:
-          OFFGRID_RELEASE_CHANNEL: latest
+          OFFGRID_RELEASE_CHANNEL: stable
         run: node apps/server/scripts/cli.ts build-exe --verbose ${{ matrix.platform == 'win' && format('--target win-{0}', matrix.arch) || '' }}
 
       - name: Stage resource monitor for the CLI archive
@@ -159,21 +174,13 @@ jobs:
         shell: bash
         run: node scripts/smoke-cli-archive.ts --archive release-cli/* --expect-version "${TAG#v}"
 
-      - name: Attach installers to the release
+      - name: Attach CLI archive to the release
+        if: matrix.cli
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: |
-          shopt -s nullglob
-          files=(release-out/*.exe release-out/*.dmg release-out/*.AppImage release-out/*.deb)
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "::error::The build produced no installer."
-            ls -la release-out
-            exit 1
-          fi
-          files+=(release-cli/*)
-          gh release upload "$TAG" "${files[@]}" --clobber
+        run: gh release upload "$TAG" release-cli/* --clobber
 
   cli_checksums:
     name: CLI checksums
