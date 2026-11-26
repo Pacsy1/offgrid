@@ -96,7 +96,7 @@ export const homeOwnedMessage = (owner: Option.Option<HomeOwner>): string =>
     onNone: () =>
       m(
         msg(
-          "Another Offgrid server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `offgrid update`. If the older launcher cannot update, run `offgrid service uninstall` and optionally reinstall with `offgrid service install` from a current CLI. Use `npx offgrid@latest` if `offgrid` is missing or outdated, and pass `--base-dir` with the service's Offgrid home to each command. Then reopen Offgrid. You can also set a separate OFFGRID_HOME and pair with the running server.",
+          "Another Offgrid server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `offgrid update`. If the older launcher cannot update, run `offgrid service uninstall` and optionally reinstall with `offgrid service install` from a current CLI. Use `curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | sh` if `offgrid` is missing or outdated, and pass `--base-dir` with the service's Offgrid home to each command. Then reopen Offgrid. You can also set a separate OFFGRID_HOME and pair with the running server.",
         ),
       ),
     onSome: (owner) => {

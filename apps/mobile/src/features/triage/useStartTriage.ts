@@ -21,7 +21,7 @@ import {
 import { useSelectWorkspaceDetail } from "../layout/workspace/useSelectWorkspaceDetail";
 import { usePrepareTriage } from "./usePrepareTriage";
 
-const CLI_COMMAND = "npx offgrid triage";
+const CLI_COMMAND = "offgrid triage";
 
 /**
  * In-app `offgrid triage`, as on web: the server writes the session files and

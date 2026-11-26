@@ -100,7 +100,9 @@ export const resolveServerInstallation = Effect.gen(function* () {
       baseDir: linked[1] || "/",
     } satisfies ServerInstallation;
   }
-  const match = /^(.*)\/lib\/node_modules\/offgrid\/(?:dist\/bin\.mjs|bin\/offgrid\.mjs)$/.exec(entry);
+  const match = /^(.*)\/lib\/node_modules\/offgrid\/(?:dist\/bin\.mjs|bin\/offgrid\.mjs)$/.exec(
+    entry,
+  );
   if (!match) {
     const runner = detectCliRunner(entry);
     return runner === null
@@ -127,28 +129,9 @@ export const resolveServerInstallation = Effect.gen(function* () {
   return { kind: "npm-global", prefix } satisfies ServerInstallation;
 }).pipe(Effect.orElseSucceed(() => null));
 
-/** The original package spec is unavailable at startup; infer its channel from the version. */
-function suggestedPackageSpec(version: string): string {
-  const channel = /^[^-+]+-(nightly|preview)\./.exec(version)?.[1];
-  return channel === undefined ? "offgrid" : `offgrid@${channel}`;
-}
-
-function formatCliCommand(input: {
-  readonly subcommand: string;
-  readonly entryPath: string;
-  readonly version: string;
-}): string {
-  const runner = detectCliRunner(input.entryPath);
-  if (runner === null) {
-    return `offgrid ${input.subcommand}`;
-  }
-  return `${runner} ${suggestedPackageSpec(input.version)} ${input.subcommand}`;
-}
-
-export const resolveCliCommand = (subcommand: string) =>
-  Effect.map(resolveEntryPath, (entryPath) =>
-    formatCliCommand({ subcommand, entryPath, version: packageJson.version }),
-  );
+// Offgrid is not on npm (the `offgrid` package there is someone else's), so a suggested command
+// never goes through npx, pnpm dlx or bunx.
+export const resolveCliCommand = (subcommand: string) => Effect.succeed(`offgrid ${subcommand}`);
 
 const shellWord = (value: string) =>
   /^[\w@%+=:,./-]+$/.test(value) ? value : `'${value.replaceAll("'", `'"'"'`)}'`;

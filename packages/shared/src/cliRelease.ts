@@ -5,6 +5,8 @@ import { compareSemverVersions } from "./semver.ts";
 
 const CLI_RELEASE_REPOSITORY = "Pacsy1/offgrid";
 export const CLI_RELEASES_PAGE_URL = `https://github.com/${CLI_RELEASE_REPOSITORY}/releases`;
+/** Offgrid is not on npm; the CLI installs and updates from release archives through this script. */
+export const OFFGRID_INSTALL_SCRIPT_URL = `https://raw.githubusercontent.com/${CLI_RELEASE_REPOSITORY}/main/scripts/install.sh`;
 export const CLI_RELEASE_CHECKSUMS_FILE = "SHA256SUMS";
 export const CLI_RELEASE_BASE_URL_ENV = "OFFGRID_RELEASE_BASE_URL";
 

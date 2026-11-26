@@ -59,7 +59,7 @@ export class OlderBootServiceError extends Schema.TaggedError<OlderBootServiceEr
   override readonly [Runtime.errorExitCode] = SERVER_EXIT_CODE_STATE_DIR_OWNED;
 
   override get message(): string {
-    return `An Offgrid background service set up for ${this.baseDir} may still run a release without the ownership lock. On that machine, try \`offgrid update\` and let it restart (or run \`offgrid service restart\` if the update is already installed). If the older launcher cannot update, run \`offgrid service uninstall\`, then reinstall with \`offgrid service install\` from a current CLI. You can also leave the service uninstalled. Pass \`--base-dir ${this.baseDir}\` to each command, and use \`npx offgrid@latest\` if \`offgrid\` is not installed or is outdated. Then retry. No server was stopped.`;
+    return `An Offgrid background service set up for ${this.baseDir} may still run a release without the ownership lock. On that machine, try \`offgrid update\` and let it restart (or run \`offgrid service restart\` if the update is already installed). If the older launcher cannot update, run \`offgrid service uninstall\`, then reinstall with \`offgrid service install\` from a current CLI. You can also leave the service uninstalled. Pass \`--base-dir ${this.baseDir}\` to each command, and reinstall \`offgrid\` with the install script (https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh) if it is not installed or is outdated. Then retry. No server was stopped.`;
   }
 }
 

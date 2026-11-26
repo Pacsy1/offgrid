@@ -109,6 +109,25 @@ Offgrid then needs one coding agent that is installed and signed in. For example
 [Codex CLI](https://developers.openai.com/codex/cli) and run `codex login`.
 [Provider setup](./docs/user/install.md#providers) has the steps for each agent.
 
+### Command line
+
+To run Offgrid as a server on a machine without the desktop app, install the `offgrid` command
+from the release archives:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | sh
+```
+
+On Windows, in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.ps1 | iex
+```
+
+Offgrid is not on npm; the `offgrid` package there belongs to someone else, so don't use
+`npx offgrid`. There is no command-line build for Intel Macs.
+[Install and first run](./docs/user/install.md#command-line) has the details.
+
 ### Build from source
 
 ```bash

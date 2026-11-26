@@ -24,7 +24,7 @@ the database.
 
 Its triage CLI version (called "Installed version" in older context files) is only
 the version of the `offgrid` that ran `offgrid triage`. It is often not the build the bug
-happened on: `npx offgrid triage` runs whatever `offgrid` npm resolves, while the user may
+happened on: `offgrid triage` runs the installed CLI, while the user may
 run the desktop app, the background service, or a nightly. The server process line
 gives the local server's version when the server recorded one.
 
@@ -65,7 +65,7 @@ Diagnosis grounded in source beats guessing.
 First establish the shape of the install, because the same symptom points at
 different code depending on it:
 
-- How is Offgrid running on this machine: `npx offgrid serve` in a terminal, the
+- How is Offgrid running on this machine: `offgrid serve` in a terminal, the
   background service, or the desktop app?
 - Which surface is the user connecting from: a hosted web app, the
   desktop app against a local server, the desktop app against a remote server,

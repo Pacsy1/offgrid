@@ -517,7 +517,7 @@ const decodeHostSetup = (reason: string): PreviewStreamHostSetup => {
       return { need: value.need, command: value.command };
     }
   } catch {}
-  return { need: "sandbox", command: "sudo npx offgrid browser setup" };
+  return { need: "sandbox", command: "sudo offgrid browser setup" };
 };
 
 export const previewStreamHostSetupMessage = (

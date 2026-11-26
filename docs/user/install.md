@@ -11,13 +11,13 @@ launch Offgrid and configure providers afterwards.
 ## Command line
 
 ```bash
-curl -fsSL https://t3.codes/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | sh
 ```
 
 On Windows, in PowerShell:
 
 ```powershell
-irm https://t3.codes/install.ps1 | iex
+irm https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.ps1 | iex
 ```
 
 This installs the `offgrid` command to `~/.local/bin`. If that folder is not on your
@@ -28,8 +28,8 @@ installer or the desktop app did not create is already there, it leaves that
 one alone and stops. Set `OFFGRID_CHANNEL=nightly` to install the nightly train, or
 `OFFGRID_VERSION` to pin an exact version.
 
-| Task                                  | Command                                                                 |
-| ------------------------------------- | ----------------------------------------------------------------------- |
+| Task                                  | Command                                                                      |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
 | Start the server and open the web app | `offgrid`                                                                    |
 | Start the server without a browser    | `offgrid serve`                                                              |
 | Use it from your other devices        | `offgrid up` ([details](./remote-access.md))                                 |
@@ -47,12 +47,8 @@ command it names and open the pairing URL to connect to that server. Stop it
 before starting a replacement, or use a different `--base-dir` for an
 independent server.
 
-To try Offgrid once without installing it, run `npx offgrid@latest` instead (needs
-Node.js for `npx`). It offers to install the `offgrid` command first. If you say no,
-it asks again at the next minor release, and `npx offgrid install` installs it later.
-`npx offgrid` always runs the version npm picked, even when a `offgrid` is installed. On
-the nightly train, run your installed `offgrid` (for example `offgrid connect`), not
-`npx offgrid`, which runs the latest stable release.
+Offgrid is not published to npm. The `offgrid` package on npm belongs to someone else, so do
+not run `npx offgrid`; install the command with the script above.
 
 ### Intel Macs
 
@@ -61,7 +57,7 @@ run a server there, build it from source with `vp`, which provides the Node vers
 ([Install vp](../operations/00_development.md#first-checkout)):
 
 ```bash
-git clone https://github.com/pingdotgg/t3code
+git clone https://github.com/Pacsy1/offgrid
 cd offgrid && vp i && vp run build:desktop
 node apps/server/dist/bin.mjs
 ```
@@ -74,12 +70,12 @@ update it with `git pull` and a rebuild.
 Download a release from [GitHub Releases](https://github.com/pingdotgg/t3code/releases),
 or use a package manager:
 
-| Platform           | Install                                                      |
-| ------------------ | ------------------------------------------------------------ |
+| Platform           | Install                                                       |
+| ------------------ | ------------------------------------------------------------- |
 | Windows            | `winget install Offgrid.Offgrid`                              |
 | Windows (Scoop)    | `scoop install extras/offgrid`                                |
-| macOS              | `brew install --cask offgrid`                                |
-| Debian, Ubuntu     | `sudo apt install ./Offgrid-*.deb`                           |
+| macOS              | `brew install --cask offgrid`                                 |
+| Debian, Ubuntu     | `sudo apt install ./Offgrid-*.deb`                            |
 | Arch Linux         | `yay -S offgrid-bin`                                          |
 | Arch Linux nightly | `yay -S offgrid-nightly-bin`                                  |
 | Nix                | `nix profile add github:NixOS/nixpkgs/nixos-unstable#offgrid` |
@@ -272,8 +268,8 @@ default is already longer keeps its default. Providers with several phases can
 take longer than one deadline in total. Values must be whole milliseconds no
 greater than 2147483647; unset or invalid values keep the defaults.
 
-| Provider            | Environment variable                   |
-| ------------------- | -------------------------------------- |
+| Provider            | Environment variable                    |
+| ------------------- | --------------------------------------- |
 | Codex               | `OFFGRID_CODEX_PROBE_TIMEOUT_MS`        |
 | Claude              | `OFFGRID_CLAUDE_PROBE_TIMEOUT_MS`       |
 | Cursor              | `OFFGRID_CURSOR_PROBE_TIMEOUT_MS`       |

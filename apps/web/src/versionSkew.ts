@@ -5,6 +5,7 @@ import type {
   ServerSelfUpdateCapability,
 } from "@offgrid/contracts";
 import type { ServerUpdateState } from "@offgrid/client-runtime/state/server";
+import { OFFGRID_INSTALL_SCRIPT_URL } from "@offgrid/shared/cliRelease";
 import { compareSemverVersions, parseSemver } from "@offgrid/shared/semver";
 import * as Schema from "effect/Schema";
 import { msg } from "gt-react";
@@ -106,16 +107,12 @@ export function manualServerUpdateCommand(
   installation?: ServerInstallation,
 ): string {
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-  if (installation?.kind === "npm-global") {
-    return `npm install --global --prefix ${quote(installation.prefix)} offgrid@${targetVersion}`;
-  }
   if (installation?.kind === "offgrid-launcher") {
     // An inherited OFFGRID_HOME would otherwise send the update to a home the launcher is not in.
     return `${quote(installation.launcher)} update --base-dir ${quote(installation.baseDir)} ${targetVersion}`;
   }
-  const runner =
-    installation?.kind === "pnpm-dlx" ? "pnpm dlx" : installation?.kind === "bunx" ? "bunx" : "npx";
-  return `${runner} offgrid@${targetVersion}`;
+  // Offgrid is not on npm, so every other install updates through the release install script.
+  return `curl -fsSL ${OFFGRID_INSTALL_SCRIPT_URL} | OFFGRID_VERSION=${targetVersion} sh`;
 }
 
 export function buildVersionMismatchDismissalKey(

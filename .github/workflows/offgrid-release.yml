@@ -47,36 +47,48 @@ jobs:
             target: nsis
             arch: x64
             rust_target: x86_64-pc-windows-msvc
+            resource_key: win32-x64
+            cli: true
           - label: Windows arm64
             runner: windows-11-arm
             platform: win
             target: nsis
             arch: arm64
             rust_target: aarch64-pc-windows-msvc
+            resource_key: win32-arm64
+            cli: true
           - label: macOS Apple Silicon
             runner: macos-26
             platform: mac
             target: dmg
             arch: arm64
             rust_target: aarch64-apple-darwin
+            resource_key: darwin-arm64
+            cli: true
           - label: macOS Intel
             runner: macos-26
             platform: mac
             target: dmg
             arch: x64
             rust_target: x86_64-apple-darwin
+            resource_key: darwin-x64
+            cli: false
           - label: Linux x64
             runner: ubuntu-24.04
             platform: linux
             target: AppImage
             arch: x64
             rust_target: x86_64-unknown-linux-gnu
+            resource_key: linux-x64
+            cli: true
           - label: Linux arm64
             runner: ubuntu-24.04-arm
             platform: linux
             target: AppImage
             arch: arm64
             rust_target: aarch64-unknown-linux-gnu
+            resource_key: linux-arm64
+            cli: true
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -107,6 +119,46 @@ jobs:
             --build-version "${TAG#v}" \
             --output-dir release-out
 
+      # The CLI archive reuses the server bundle, web client and resource monitor the installer built.
+      - name: Apply web client branding for the CLI archive
+        if: matrix.cli
+        shell: bash
+        run: node scripts/apply-web-brand-assets.ts production apps/server/dist/client
+
+      - name: Build CLI single-executable
+        if: matrix.cli
+        shell: bash
+        env:
+          OFFGRID_RELEASE_CHANNEL: latest
+        run: node apps/server/scripts/cli.ts build-exe --verbose ${{ matrix.platform == 'win' && format('--target win-{0}', matrix.arch) || '' }}
+
+      - name: Stage resource monitor for the CLI archive
+        if: matrix.cli
+        shell: bash
+        run: |
+          set -euo pipefail
+          binary_name="offgrid-resource-monitor"
+          if [[ "${{ matrix.platform }}" == "win" ]]; then binary_name="${binary_name}.exe"; fi
+          target_dir="$RUNNER_TEMP/cli-resource-monitor/${{ matrix.resource_key }}"
+          mkdir -p "$target_dir"
+          cp "native/resource-monitor/target/${{ matrix.rust_target }}/release/${binary_name}" "$target_dir/$binary_name"
+
+      # The Linux archive ships libatomic.so.1 and points offgrid's RUNPATH at it.
+      - name: Install patchelf
+        if: matrix.cli && matrix.platform == 'linux'
+        run: command -v patchelf || sudo apt-get install -y patchelf
+
+      - name: Build CLI archive
+        if: matrix.cli
+        shell: bash
+        run: |
+          node scripts/build-cli-archive.ts --platform "${{ matrix.platform }}" --arch "${{ matrix.arch }}" --version "${TAG#v}" --resource-monitor-dir "$RUNNER_TEMP/cli-resource-monitor" --output-dir release-cli
+
+      - name: Smoke-test CLI archive
+        if: matrix.cli
+        shell: bash
+        run: node scripts/smoke-cli-archive.ts --archive release-cli/* --expect-version "${TAG#v}"
+
       - name: Attach installers to the release
         shell: bash
         env:
@@ -120,7 +172,33 @@ jobs:
             ls -la release-out
             exit 1
           fi
+          files+=(release-cli/*)
           gh release upload "$TAG" "${files[@]}" --clobber
+
+  cli_checksums:
+    name: CLI checksums
+    needs: build
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      # The install scripts, `offgrid update`, and the SSH launcher verify archives against SHA256SUMS.
+      - name: Write SHA256SUMS for the CLI archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir cli && cd cli
+          gh release download "$TAG" --pattern 'offgrid-*.tar.gz' --pattern 'offgrid-*.zip'
+          shopt -s nullglob
+          archives=(offgrid-*.tar.gz offgrid-*.zip)
+          if [ "${#archives[@]}" -eq 0 ]; then
+            echo "::error::The release has no CLI archives."
+            exit 1
+          fi
+          sha256sum "${archives[@]}" > SHA256SUMS
+          cat SHA256SUMS
+          gh release upload "$TAG" SHA256SUMS --clobber
 
   packages:
     name: Flatpak and AUR

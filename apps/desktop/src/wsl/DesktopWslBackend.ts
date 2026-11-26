@@ -128,7 +128,7 @@ export const layer = Layer.effect(
                 Ref.set(
                   preflightErrorRef,
                   Option.some(
-                    "Another Offgrid server is using this distro's Offgrid home, or an older background service is set up for it. Stop that server or pair with it, or try `offgrid update` in the distro. If the older launcher cannot update, run `offgrid service uninstall` and optionally reinstall with `offgrid service install` from a current CLI in the distro. Use `npx offgrid@latest` if `offgrid` is missing or outdated, and pass `--base-dir` with the service's Offgrid home to each command.",
+                    "Another Offgrid server is using this distro's Offgrid home, or an older background service is set up for it. Stop that server or pair with it, or try `offgrid update` in the distro. If the older launcher cannot update, run `offgrid service uninstall` and optionally reinstall with `offgrid service install` from a current CLI in the distro. Use `curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | sh` if `offgrid` is missing or outdated, and pass `--base-dir` with the service's Offgrid home to each command.",
                   ),
                 ),
               ),

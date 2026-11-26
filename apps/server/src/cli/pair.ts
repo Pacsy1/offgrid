@@ -544,7 +544,7 @@ export const pairCommand = Command.make("pair", {
         return yield* new IncompatibleServerProtocolError({
           serverVersion: target.descriptor.serverVersion,
           serverProtocolVersion,
-          pairCommand: `npx offgrid@${target.descriptor.serverVersion} pair${baseDirArgs}`,
+          pairCommand: `offgrid pair${baseDirArgs}`,
         });
       }
 

@@ -21,12 +21,10 @@ const MISMATCH_HINT =
 
 describe("versionSkew", () => {
   it("updates only the proven install and safely quotes its paths", () => {
+    // Offgrid is not on npm, so even an npm-looking install updates through the install script.
     expect(manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/node" })).toBe(
-      "npm install --global --prefix '/opt/node' offgrid@0.0.45",
+      "curl -fsSL https://raw.githubusercontent.com/Pacsy1/offgrid/main/scripts/install.sh | OFFGRID_VERSION=0.0.45 sh",
     );
-    expect(
-      manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/maria's node" }),
-    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' offgrid@0.0.45");
     expect(
       manualServerUpdateCommand("0.0.45", {
         kind: "offgrid-launcher",

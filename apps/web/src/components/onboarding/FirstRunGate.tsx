@@ -97,7 +97,7 @@ export function FirstRunGate({
   }));
   const { decision, stalled } = gateState;
   const settingsReadFailed = hydrationStatus === "failed" || hydrationStatus === "retrying";
-  // The server's sole cwd-bootstrap project/thread still counts as fresh so npx offgrid users see onboarding.
+  // The server's sole cwd-bootstrap project/thread still counts as fresh so command-line users see onboarding.
   const serverCwd = serverConfig?.cwd ?? null;
   const primaryEnvironmentId = serverConfig?.environment.environmentId ?? null;
   const workspaceFresh =

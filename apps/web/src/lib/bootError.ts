@@ -1,6 +1,6 @@
 import type { DesktopBridge, DesktopUpdateState } from "@offgrid/contracts";
 
-const FALLBACK_TRIAGE_COMMAND = "npx offgrid triage";
+const FALLBACK_TRIAGE_COMMAND = "offgrid triage";
 const LAST_FAILURE_KEY = "offgrid:boot-failed-at";
 const REPEAT_FAILURE_MS = 5 * 60_000;
 const MAX_CAUSES = 3;

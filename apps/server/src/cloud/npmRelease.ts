@@ -3,8 +3,7 @@ import {
   ServerNpmReleaseInput,
   type ServerNpmRelease,
 } from "@offgrid/contracts";
-import { npmReleaseDatabaseMigration } from "@offgrid/shared/cliRelease";
-import { resolveCommandPath } from "@offgrid/shared/shell";
+import { cliReleaseIndexPageUrl, newestCliReleaseVersion } from "@offgrid/shared/cliRelease";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -12,21 +11,16 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as Semaphore from "effect/Semaphore";
 import { FetchHttpClient, HttpClient } from "effect/http";
 
-import * as ProcessRunner from "../processRunner.ts";
-
-const Version = Schema.String.check(Schema.isPattern(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/));
-const Manifest = Schema.Struct({ version: Version, offgrid: Schema.optionalKey(Schema.Unknown) });
-// npm prints a bare version string when the release has no `offgrid` field.
-const decodeManifest = Schema.decodeUnknownOption(
-  Schema.fromJsonString(Schema.Union([Manifest, Schema.Tuple([Manifest]), Version])),
+// Offgrid is not on npm (the `offgrid` package there belongs to someone else), so releases are read
+// from this project's GitHub releases. The service keeps its npm name to match the wire contract.
+const Releases = Schema.Array(
+  Schema.Struct({ tag_name: Schema.String, draft: Schema.optionalKey(Schema.Boolean) }),
 );
-const decodeError = Schema.decodeUnknownOption(
-  Schema.fromJsonString(Schema.Struct({ error: Schema.Struct({ code: Schema.String }) })),
-);
+const decodeReleases = Schema.decodeUnknownOption(Schema.fromJsonString(Releases));
 const decodeInput = Schema.decodeUnknownEffect(ServerNpmReleaseInput);
+const MAX_RELEASE_PAGES = 3;
 
 export class NpmRelease extends Context.Service<
   NpmRelease,
@@ -37,82 +31,49 @@ export class NpmRelease extends Context.Service<
   }
 >()("offgrid/cloud/npmRelease") {}
 
-function toRelease(spec: string, json: string) {
-  const decoded = Option.getOrUndefined(decodeManifest(json));
-  const manifest =
-    typeof decoded === "string"
-      ? { version: decoded }
-      : decoded && ("version" in decoded ? decoded : decoded[0]);
-  if (!manifest || (spec !== "latest" && spec !== "nightly" && manifest.version !== spec)) {
-    return Effect.fail(
-      new ServerNpmReleaseError({ reason: "npm returned invalid release metadata." }),
-    );
-  }
-  const databaseMigration = npmReleaseDatabaseMigration(manifest);
-  return Effect.succeed({
-    version: manifest.version,
-    ...(databaseMigration === undefined ? {} : { databaseMigration }),
-  });
-}
-
 export const make = Effect.fn("NpmRelease.make")(function* () {
-  const runner = yield* ProcessRunner.ProcessRunner;
   const http = yield* HttpClient.HttpClient;
-  const lookupPublic = Effect.fn("NpmRelease.lookupPublic")(function* (spec: string) {
-    const unreachable = new ServerNpmReleaseError({
-      reason: "npm is not installed and the public npm registry could not be reached.",
-    });
-    const json = yield* Effect.gen(function* () {
-      const response = yield* http.get(`https://registry.npmjs.org/offgrid/${spec}`);
-      if (response.status === 404) return Option.none<string>();
-      if (response.status < 200 || response.status >= 300) return yield* unreachable;
-      return Option.some(yield* response.text);
-    }).pipe(
-      Effect.timeout(Duration.seconds(15)),
-      Effect.mapError(() => unreachable),
-    );
-    return Option.isNone(json) ? null : yield* toRelease(spec, json.value);
+  const unreachable = new ServerNpmReleaseError({
+    reason: "GitHub releases could not be reached.",
   });
-  // npm loads the whole package history per lookup, so a burst of specs must not spawn one each.
-  const npmPermits = yield* Semaphore.make(2);
+  const readPage = Effect.fn("NpmRelease.readPage")(
+    function* (page: number) {
+      const response = yield* http
+        .get(cliReleaseIndexPageUrl(page), {
+          headers: { accept: "application/vnd.github+json" },
+        })
+        .pipe(Effect.mapError(() => unreachable));
+      if (response.status < 200 || response.status >= 300) return yield* unreachable;
+      const text = yield* response.text.pipe(Effect.mapError(() => unreachable));
+      const releases = Option.getOrUndefined(decodeReleases(text));
+      if (releases === undefined) {
+        return yield* new ServerNpmReleaseError({
+          reason: "GitHub returned invalid release metadata.",
+        });
+      }
+      return releases;
+    },
+    Effect.timeoutOrElse({
+      duration: Duration.seconds(15),
+      orElse: () => Effect.fail(unreachable),
+    }),
+  );
   const cache = yield* Cache.make({
     capacity: 32,
     timeToLive: Duration.minutes(1),
     lookup: Effect.fn("NpmRelease.lookup")(function* (spec: string) {
-      // Without npm there is no configured registry to honor, so use the public one.
-      const npmPath = yield* resolveCommandPath("npm");
-      if (npmPath === null) return yield* lookupPublic(spec);
-      const output = yield* npmPermits
-        .withPermits(1)(
-          runner.run({
-            command: npmPath,
-            // Named fields keep the output small; the full package document grows with every release.
-            args: ["view", "--global", "--json", `offgrid@${spec}`, "version", "offgrid"],
-            timeout: Duration.seconds(15),
-            maxOutputBytes: 256 * 1024,
-          }),
-        )
-        .pipe(
-          Effect.tapError((error) =>
-            Effect.logInfo("npm release lookup failed", { tag: error._tag }),
-          ),
-          Effect.mapError(
-            () => new ServerNpmReleaseError({ reason: "npm could not complete the lookup." }),
-          ),
-        );
-      if (output.timedOut || output.stdoutTruncated || output.stdoutInvalidUtf8) {
-        return yield* new ServerNpmReleaseError({ reason: "npm returned an incomplete response." });
+      for (let page = 1; page <= MAX_RELEASE_PAGES; page += 1) {
+        const releases = yield* readPage(page);
+        const version =
+          spec === "latest" || spec === "nightly"
+            ? newestCliReleaseVersion(releases, spec === "nightly" ? "nightly" : "stable")
+            : releases.some((release) => !release.draft && release.tag_name === `v${spec}`)
+              ? spec
+              : undefined;
+        if (version !== undefined) return { version } satisfies ServerNpmRelease;
+        if (releases.length < 100) break;
       }
-      if (output.code !== 0) {
-        const error = Option.getOrUndefined(decodeError(output.stdout));
-        if (error?.error.code === "E404") return null;
-        yield* Effect.logInfo("npm release lookup failed", {
-          exitCode: output.code,
-          npmErrorCode: error?.error.code,
-        });
-        return yield* new ServerNpmReleaseError({ reason: "npm could not read release metadata." });
-      }
-      return yield* toRelease(spec, output.stdout);
+      return null;
     }),
   });
   return NpmRelease.of({
@@ -127,6 +88,4 @@ export const make = Effect.fn("NpmRelease.make")(function* () {
   });
 });
 
-export const layer = Layer.effect(NpmRelease, make()).pipe(
-  Layer.provide([ProcessRunner.layer, FetchHttpClient.layer]),
-);
+export const layer = Layer.effect(NpmRelease, make()).pipe(Layer.provide(FetchHttpClient.layer));
